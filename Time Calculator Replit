@@ -1,0 +1,101 @@
+def add_time(start, duration, weekday=None):
+    x = start
+    dur = duration
+    if weekday is not None:
+        wk = weekday
+        wk = wk.lower()
+
+    def daynight(k):  # strips out the AM- PM suffixes
+        dn = k[:-3:-1]
+        dn = dn[::-1]
+        return dn
+
+    daynit = daynight(x)
+
+    def timestrip(
+            k):  # strips the time part of the code into hours and minutes
+        mins = k[-4:-6:-1]
+        mins = mins[::-1]
+        hrs = k[-7::-1]
+        hrs = hrs[::-1]
+        return hrs, mins
+
+    strippedtime = timestrip(x)
+
+    def durationstrip(
+            k):  # strips the duration parameter into hours and minutes
+        mins = k[:-3:-1]
+        mins = mins[::-1]
+        hrs = k[-4::-1]
+        hrs = hrs[::-1]
+        return hrs, mins
+
+    strippedduration = durationstrip(dur)
+
+    def timeswitch(
+        daytime
+    ):  # defines correlation between AM PM switches and day switching
+        extrday = 0
+        minsum = int(strippedtime[1]) + int(strippedduration[1])
+        extr = int(int(minsum) / 60)
+        g = int(strippedtime[0]) + int(
+            strippedduration[0]) + extr  # pulling out raw hoursum basically
+        switches = int(g / 12)
+        if switches % 2 != 0:
+            if daytime == 'AM':
+                daytime = 'PM'
+            elif daytime == 'PM':
+                daytime = 'AM'
+                extrday = 1
+
+        return g, minsum, extr, daytime, extrday, switches
+
+    timeswch = timeswitch(daynit)
+
+    def timeadd():
+        minsum = timeswch[1]
+        minsum = int(minsum) % 60
+        if minsum < 10:
+            minsum = '0' + '{}'.format(minsum)
+        rawhrsum = timeswch[0]
+        daysum = int(rawhrsum / 24) + timeswch[4]
+        hrsum = rawhrsum % 12
+        if hrsum == 0:
+            hrsum = str(12)
+        return daysum, hrsum, minsum, rawhrsum
+
+    sumtime = timeadd()
+
+    def days():  # to write how many days after
+        g = sumtime[0]
+        if g == 0:
+            return ''
+        elif g == 1:
+            return ' (next day)'
+        else:
+            return ' ({} days later)'.format(g)
+
+    dayz = days()
+
+    if weekday is None:
+        output = '{}'.format(int(sumtime[1])) + ':' + '{} {}{}'.format(
+            sumtime[2], timeswch[3], dayz)
+    else:
+
+        def weekdays():
+            daysoftheweek = [
+                'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+                'saturday', 'sunday'
+            ]
+            k = (daysoftheweek.index(wk) + sumtime[0]) % 7
+            return daysoftheweek[k].capitalize(), k
+
+        weekdaysresult = weekdays()
+
+        output = '{}'.format(int(sumtime[1])) + ':' + '{} {}'.format(
+            sumtime[2], timeswch[3]) + ',' + ' {}{}'.format(
+                weekdaysresult[0], dayz)
+
+    return output
+    
+print(add_time("11:06 PM", "2:02"))
